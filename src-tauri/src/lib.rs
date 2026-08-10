@@ -18,6 +18,7 @@ pub struct AppState {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             let app_data_dir = app.path().app_data_dir()?;
             std::fs::create_dir_all(&app_data_dir)?;
@@ -37,6 +38,11 @@ pub fn run() {
             commands::ai::save_ai_message,
             commands::ai::update_ai_session,
             commands::ai::search_ai_rag,
+            commands::ai::list_ai_rag_documents,
+            commands::ai::save_ai_rag_document,
+            commands::ai::delete_ai_rag_document,
+            commands::ai::export_ai_workspace,
+            commands::ai::import_ai_workspace,
             commands::ai::get_ai_provider_status,
             commands::ai::save_openai_api_key,
             commands::ai::delete_openai_api_key,
@@ -57,7 +63,17 @@ pub fn run() {
             commands::library::clear_clipboard_history,
             commands::library::clear_library_data,
             commands::library::clear_all_data,
+            commands::library::list_clipboard_tags,
+            commands::library::set_clipboard_tags,
+            commands::library::list_collections,
+            commands::library::save_collection,
+            commands::library::delete_collection,
+            commands::library::list_collection_assignments,
+            commands::library::assign_collection_item,
             commands::system::detect_filemaker,
+            commands::update::check_for_updates,
+            commands::workspace::save_workspace_file,
+            commands::workspace::read_workspace_file,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Vertex FM Engine");

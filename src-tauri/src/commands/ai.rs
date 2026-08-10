@@ -5,8 +5,8 @@ use crate::ai::{
     AiProviderRequest, AiProviderResponse, AiProviderStatus,
 };
 use crate::database::ai_models::{
-    AiMessage, AiSession, AiSessionDetail, CreateAiSession, RagDocument, SaveAiMessage,
-    UpdateAiSession,
+    AiMessage, AiSession, AiSessionDetail, AiWorkspaceData, CreateAiSession, RagDocument,
+    SaveAiMessage, SaveRagDocument, UpdateAiSession,
 };
 use crate::database::ai_repository;
 use crate::AppState;
@@ -81,6 +81,57 @@ pub fn search_ai_rag(
         .with_connection(|connection| {
             ai_repository::search_rag(connection, &query, limit.unwrap_or(8))
         })
+        .map_err(|error| error.to_string())
+}
+
+#[tauri::command]
+pub fn list_ai_rag_documents(
+    state: State<'_, AppState>,
+    limit: Option<usize>,
+) -> Result<Vec<RagDocument>, String> {
+    state
+        .database
+        .with_connection(|connection| {
+            ai_repository::list_rag_documents(connection, limit.unwrap_or(500))
+        })
+        .map_err(|error| error.to_string())
+}
+
+#[tauri::command]
+pub fn save_ai_rag_document(
+    state: State<'_, AppState>,
+    document: SaveRagDocument,
+) -> Result<RagDocument, String> {
+    state
+        .database
+        .with_connection(|connection| ai_repository::save_rag_document(connection, document))
+        .map_err(|error| error.to_string())
+}
+
+#[tauri::command]
+pub fn delete_ai_rag_document(state: State<'_, AppState>, id: String) -> Result<bool, String> {
+    state
+        .database
+        .with_connection(|connection| ai_repository::delete_rag_document(connection, &id))
+        .map_err(|error| error.to_string())
+}
+
+#[tauri::command]
+pub fn export_ai_workspace(state: State<'_, AppState>) -> Result<AiWorkspaceData, String> {
+    state
+        .database
+        .with_connection(ai_repository::export_workspace)
+        .map_err(|error| error.to_string())
+}
+
+#[tauri::command]
+pub fn import_ai_workspace(
+    state: State<'_, AppState>,
+    workspace: AiWorkspaceData,
+) -> Result<(), String> {
+    state
+        .database
+        .with_connection_mut(|connection| ai_repository::import_workspace(connection, workspace))
         .map_err(|error| error.to_string())
 }
 

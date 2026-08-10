@@ -4,6 +4,8 @@ import { useNavigationStore } from '../stores/navigation'
 import { useLocaleStore } from '../stores/locale'
 import { useClipboardStore } from '../stores/clipboard'
 import { useEditorStore } from '../stores/editor'
+import { useLibraryStore } from '../stores/library'
+import { useCollectionWorkspaceStore } from '../stores/collectionWorkspace'
 import VertexHeader from '../components/layout/VertexHeader.vue'
 import ClipboardSidebar from '../components/clipboard/ClipboardSidebar.vue'
 import EditorWorkspace from '../components/editor/EditorWorkspace.vue'
@@ -13,6 +15,7 @@ import StatusBar from '../components/layout/StatusBar.vue'
 import ModuleWorkspace from '../components/workspace/ModuleWorkspace.vue'
 import CodexWorkspace from '../components/codex/CodexWorkspace.vue'
 import DocumentationWorkspace from '../components/docs/DocumentationWorkspace.vue'
+import CollectionBrowserWorkspace from '../components/collections/CollectionBrowserWorkspace.vue'
 import { useClipboardMonitor } from '../composables/useClipboardMonitor'
 import { formatXmlForDisplay } from '../utils/xmlFormat'
 
@@ -20,6 +23,8 @@ const navigation = useNavigationStore()
 const locale = useLocaleStore()
 const clipboard = useClipboardStore()
 const editor = useEditorStore()
+const library = useLibraryStore()
+const collectionWorkspace = useCollectionWorkspaceStore()
 useClipboardMonitor()
 
 const SIDEBAR_MIN = 260
@@ -97,6 +102,8 @@ window.addEventListener('resize', handleWindowResize)
 onMounted(async () => {
   try {
     await clipboard.initialize()
+    await library.initialize()
+    await collectionWorkspace.initialize()
     if (clipboard.selectedItem) {
       const displayXml = formatXmlForDisplay(clipboard.selectedItem.xml)
       editor.content = displayXml
@@ -117,11 +124,13 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
+  <!-- Clipboard, collection browser, and editor share one SPA shell. -->
   <div class="vertex-shell" :style="shellStyle">
     <VertexHeader class="app-header" />
-    <template v-if="navigation.active === 'clipboard'">
+    <template v-if="navigation.active === 'clipboard' || navigation.active === 'collections'">
       <ClipboardSidebar class="app-sidebar" />
-      <EditorWorkspace class="app-editor" />
+      <CollectionBrowserWorkspace v-if="navigation.active === 'collections'" class="app-editor" />
+      <EditorWorkspace v-else class="app-editor" />
       <InspectorPanel class="app-inspector" />
       <BottomPanel class="app-bottom" />
       <div

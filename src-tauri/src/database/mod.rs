@@ -1,5 +1,6 @@
 pub mod ai_models;
 pub mod ai_repository;
+pub mod metadata_repository;
 pub mod migrations;
 pub mod models;
 pub mod repository;

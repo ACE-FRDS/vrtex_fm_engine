@@ -163,8 +163,7 @@ mod tests {
         let report = validate(xml, Some("XMSS"));
         assert!(report.valid);
         assert!(report.issues.iter().any(|issue| {
-            issue.code == "STEP_ID_UNKNOWN"
-                && matches!(issue.level, ValidationLevel::Warning)
+            issue.code == "STEP_ID_UNKNOWN" && matches!(issue.level, ValidationLevel::Warning)
         }));
         assert!(report
             .issues
