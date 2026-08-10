@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ACE-FRDS/vrtes_fm_engine.git"
+    "url": "https://github.com/ACE-FRDS/vrtex_fm_engine.git"
   },
   "type": "module",
   "scripts": {
