@@ -3,6 +3,7 @@ import { isTauriRuntime } from './nativeGateway'
 import type {
   AiMessage,
   AiConnectionTest,
+  AiWorkspaceData,
   AiProviderRequest,
   AiProviderResponse,
   AiProviderStatus,
@@ -10,11 +11,13 @@ import type {
   AiSessionDetail,
   CreateAiSessionInput,
   RagDocument,
+  SaveRagDocumentInput,
   UpdateAiSessionInput,
 } from '../types/ai'
 
 const SESSIONS_KEY = 'vertex.aiSessions'
 const MESSAGES_KEY = 'vertex.aiMessages'
+const RAG_DOCUMENTS_KEY = 'vertex.ragDocuments'
 
 const load = <T>(key: string, fallback: T): T => {
   try {
@@ -47,6 +50,46 @@ const fallbackRag: RagDocument[] = [
 ]
 
 export const aiGateway = {
+  async exportWorkspace(): Promise<AiWorkspaceData> {
+    if (isTauriRuntime()) return invoke<AiWorkspaceData>('export_ai_workspace')
+    return {
+      sessions: load<AiSession[]>(SESSIONS_KEY, []),
+      messages: load<AiMessage[]>(MESSAGES_KEY, []),
+      ragDocuments: load<RagDocument[]>(RAG_DOCUMENTS_KEY, fallbackRag),
+    }
+  },
+
+  async importWorkspace(workspace: AiWorkspaceData) {
+    if (isTauriRuntime()) return invoke<void>('import_ai_workspace', { workspace })
+    save(SESSIONS_KEY, workspace.sessions)
+    save(MESSAGES_KEY, workspace.messages)
+    save(RAG_DOCUMENTS_KEY, workspace.ragDocuments)
+  },
+
+  async listRagDocuments(limit = 500) {
+    if (isTauriRuntime()) return invoke<RagDocument[]>('list_ai_rag_documents', { limit })
+    return load<RagDocument[]>(RAG_DOCUMENTS_KEY, fallbackRag).slice(0, limit)
+  },
+
+  async saveRagDocument(document: SaveRagDocumentInput) {
+    if (isTauriRuntime()) return invoke<RagDocument>('save_ai_rag_document', { document })
+    const documents = load<RagDocument[]>(RAG_DOCUMENTS_KEY, fallbackRag)
+    const saved: RagDocument = { ...document, id: document.id ?? crypto.randomUUID(), score: 0 }
+    const index = documents.findIndex((candidate) => candidate.id === saved.id)
+    if (index >= 0) documents[index] = saved
+    else documents.unshift(saved)
+    save(RAG_DOCUMENTS_KEY, documents)
+    return saved
+  },
+
+  async deleteRagDocument(id: string) {
+    if (isTauriRuntime()) return invoke<boolean>('delete_ai_rag_document', { id })
+    const documents = load<RagDocument[]>(RAG_DOCUMENTS_KEY, fallbackRag)
+    const next = documents.filter((document) => document.id !== id)
+    save(RAG_DOCUMENTS_KEY, next)
+    return next.length !== documents.length
+  },
+
   async listSessions(projectId: string, limit = 100) {
     if (isTauriRuntime()) return invoke<AiSession[]>('list_ai_sessions', { projectId, limit })
     return load<AiSession[]>(SESSIONS_KEY, [])
@@ -115,7 +158,7 @@ export const aiGateway = {
     for (const [keyword, aliases] of intentAliases) {
       if (normalizedQuery.includes(keyword)) terms.push(...aliases)
     }
-    const ranked = fallbackRag
+    const ranked = load<RagDocument[]>(RAG_DOCUMENTS_KEY, fallbackRag)
       .map((document) => ({
         ...document,
         score: terms.reduce((score, term) =>
@@ -125,7 +168,7 @@ export const aiGateway = {
       }))
       .filter((document) => document.score > 0)
       .sort((left, right) => right.score - left.score)
-    return (ranked.length > 0 ? ranked : fallbackRag.map((document) => ({ ...document, score: 1 })))
+    return (ranked.length > 0 ? ranked : load<RagDocument[]>(RAG_DOCUMENTS_KEY, fallbackRag).map((document) => ({ ...document, score: 1 })))
       .slice(0, limit)
   },
 

@@ -16,6 +16,7 @@
   "dependencies": {
     "@quasar/extras": "^1.16.17",
     "@tauri-apps/api": "^2.8.0",
+    "@tauri-apps/plugin-dialog": "^2.7.2",
     "monaco-editor": "^0.52.2",
     "pinia": "^3.0.3",
     "quasar": "^2.18.2",

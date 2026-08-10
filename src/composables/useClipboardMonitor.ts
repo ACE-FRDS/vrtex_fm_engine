@@ -5,6 +5,7 @@ import { isTauriRuntime, nativeGateway } from '../services/nativeGateway'
 import { useClipboardStore } from '../stores/clipboard'
 import { useLocaleStore } from '../stores/locale'
 import { useSettingsStore } from '../stores/settings'
+import { useCollectionWorkspaceStore } from '../stores/collectionWorkspace'
 
 const POLLING_INTERVAL_MS = 1_500
 
@@ -25,6 +26,7 @@ export function useClipboardMonitor() {
   const clipboard = useClipboardStore()
   const locale = useLocaleStore()
   const settings = useSettingsStore()
+  const collectionWorkspace = useCollectionWorkspaceStore()
   let timer: number | undefined
   let polling = false
   let lastFingerprint = ''
@@ -66,6 +68,7 @@ export function useClipboardMonitor() {
         favorite: false,
         inLibrary: false,
       }, { select: false })
+      await collectionWorkspace.assignItemToProject(saved.id)
 
       lastFingerprint = fingerprint
       lastError = ''
