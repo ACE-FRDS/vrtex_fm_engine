@@ -5,7 +5,7 @@ import { useClipboardStore } from '../../stores/clipboard'
 import { useEditorStore } from '../../stores/editor'
 import { useLibraryStore } from '../../stores/library'
 import { useCollectionWorkspaceStore } from '../../stores/collectionWorkspace'
-import { useSettingsStore } from '../../stores/settings'
+import { appThemes, useSettingsStore } from '../../stores/settings'
 import { useLocaleStore } from '../../stores/locale'
 import { useAiAssistantStore } from '../../stores/aiAssistant'
 import { useNavigationStore } from '../../stores/navigation'
@@ -15,7 +15,7 @@ import { formatXmlForDisplay } from '../../utils/xmlFormat'
 import type { AiConnectionTest, RagDocument } from '../../types/ai'
 import type { WorkspaceMode } from '../../stores/navigation'
 
-const props = defineProps<{ mode: Exclude<WorkspaceMode, 'clipboard' | 'codex' | 'docs'> }>()
+const props = defineProps<{ mode: Exclude<WorkspaceMode, 'clipboard' | 'codex' | 'knowledge' | 'relationship' | 'docs'> }>()
 const $q = useQuasar()
 const clipboard = useClipboardStore()
 const editor = useEditorStore()
@@ -491,6 +491,49 @@ function confirmOpenAiApiKeyDeletion() {
 
       <Transition name="settings-slide" mode="out-in">
         <div v-if="settingsSection === 'general'" key="general" class="settings-page general-settings-page">
+          <div class="settings-group appearance-settings">
+            <span>{{ locale.t('appearanceSettings') }}</span>
+            <div class="theme-picker-heading">
+              <div><strong>{{ locale.t('colorTheme') }}</strong><small>{{ locale.t('colorThemeHelp') }}</small></div>
+              <div class="theme-picker-actions">
+                <label class="cursor-theme-toggle">
+                  <span class="material-icons" aria-hidden="true">mouse</span>
+                  <span class="cursor-theme-toggle-copy">
+                    <strong>{{ locale.language === 'ja' ? 'テーマ連動カーソル' : 'Theme cursor' }}</strong>
+                    <small>{{ settings.customCursor ? (locale.language === 'ja' ? 'テーマ色を使用' : 'Uses theme color') : (locale.language === 'ja' ? 'Windows標準' : 'System default') }}</small>
+                  </span>
+                  <input
+                    v-model="settings.customCursor"
+                    type="checkbox"
+                    role="switch"
+                    :aria-label="locale.language === 'ja' ? 'テーマ連動カーソル' : 'Theme cursor'"
+                  />
+                </label>
+                <em>{{ appThemes.length }} THEMES</em>
+              </div>
+            </div>
+            <div class="theme-grid" role="radiogroup" :aria-label="locale.t('colorTheme')">
+              <button
+                v-for="themeOption in appThemes"
+                :key="themeOption.id"
+                type="button"
+                class="theme-card"
+                :class="{ active: settings.theme === themeOption.id }"
+                role="radio"
+                :aria-checked="settings.theme === themeOption.id"
+                @click="settings.theme = themeOption.id"
+              >
+                <span class="theme-swatch" aria-hidden="true">
+                  <i v-for="color in themeOption.colors" :key="color" :style="{ backgroundColor: color }" />
+                </span>
+                <span class="theme-card-copy">
+                  <strong>{{ locale.language === 'ja' ? themeOption.nameJa : themeOption.nameEn }}</strong>
+                  <small>{{ locale.language === 'ja' ? themeOption.descriptionJa : themeOption.descriptionEn }}</small>
+                </span>
+                <span v-if="settings.theme === themeOption.id" class="material-icons theme-selected">check_circle</span>
+              </button>
+            </div>
+          </div>
           <div class="settings-group">
             <span>{{ locale.t('editorSettings') }}</span>
             <label><div><strong>{{ locale.t('monacoFontSize') }}</strong><small>{{ locale.t('monacoFontSizeHelp') }}</small></div><input v-model.number="settings.fontSize" type="number" min="10" max="24" /></label>

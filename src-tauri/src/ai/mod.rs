@@ -1,6 +1,7 @@
 mod credentials;
 mod prompt;
-mod provider;
+pub mod prompt_builder;
+pub mod provider;
 
 pub use credentials::CredentialStore;
 pub use prompt::build_prompt;

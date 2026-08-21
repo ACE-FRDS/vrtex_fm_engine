@@ -13,6 +13,7 @@ import {
   useCollectionWorkspaceStore,
 } from '../../stores/collectionWorkspace'
 import { formatXmlForDisplay } from '../../utils/xmlFormat'
+import { clipboardObjectMultiplicity } from '../../utils/clipboardItemNaming'
 import type { ClipboardItem } from '../../types/clipboard'
 
 const clipboard = useClipboardStore()
@@ -241,17 +242,11 @@ function timeLabel(iso: string) {
   }).format(new Date(iso))
 }
 
-function isMultipleScripts(item: ClipboardItem) {
-  if (item.format !== 'XMSC') return false
-  const document = new DOMParser().parseFromString(item.xml, 'application/xml')
-  if (document.querySelector('parsererror')) return false
-  return document.querySelectorAll('Script').length > 1
-}
-
 function objectTypeLabel(item: ClipboardItem) {
-  return isMultipleScripts(item)
-    ? locale.t('multipleScripts')
-    : item.objectType
+  const multiplicity = clipboardObjectMultiplicity(item.xml)
+  if (item.format === 'XMTB' && multiplicity.tableCount > 1) return locale.t('multipleTables')
+  if (item.format === 'XMSC' && multiplicity.scriptCount > 1) return locale.t('multipleScripts')
+  return item.objectType
 }
 
 async function openHistoryItem(item: ClipboardItem) {
@@ -807,3 +802,42 @@ function confirmHistoryDeletion() {
     </section>
   </aside>
 </template>
+
+<style scoped>
+.panel-heading .eyebrow {
+  color: var(--blue-bright);
+}
+
+.collection-row {
+  color: var(--muted);
+}
+
+.collection-row:hover {
+  background: var(--bg-hover);
+  color: var(--text);
+}
+
+.collection-row.active {
+  background: linear-gradient(90deg, rgba(var(--accent-rgb), .2), var(--bg-panel-raised));
+  color: var(--text);
+  box-shadow: inset 2px 0 var(--blue-bright);
+}
+
+.collection-row .folder,
+.collection-row.active .folder,
+.collection-row.active em {
+  color: var(--blue-bright);
+}
+
+.collection-row em {
+  color: var(--faint);
+}
+
+.tree-line {
+  border-color: var(--line-bright);
+}
+
+.collection-project-tree .collection-group {
+  border-color: var(--line);
+}
+</style>

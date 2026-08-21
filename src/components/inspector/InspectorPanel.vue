@@ -5,12 +5,13 @@ import { sampleInspector } from '../../data/sample'
 import { clipboardGateway } from '../../services/clipboardGateway'
 import { isTauriRuntime, nativeGateway } from '../../services/nativeGateway'
 import { formatXmlForDisplay } from '../../utils/xmlFormat'
+import { clipboardItemName } from '../../utils/clipboardItemNaming'
 import { useClipboardStore } from '../../stores/clipboard'
 import { useEditorStore } from '../../stores/editor'
 import { useLocaleStore } from '../../stores/locale'
 import { createDefaultCollection, useLibraryStore } from '../../stores/library'
 import { collectionCategories, useCollectionWorkspaceStore, type CollectionCategoryId } from '../../stores/collectionWorkspace'
-import { useSettingsStore } from '../../stores/settings'
+import { useSettingsStore, type AppThemeId } from '../../stores/settings'
 import { useAiAssistantStore } from '../../stores/aiAssistant'
 import { useNavigationStore, type WorkspaceMode } from '../../stores/navigation'
 import { aiGateway } from '../../services/aiGateway'
@@ -75,6 +76,7 @@ interface WorkspaceSnapshot {
     minimap?: boolean
     fileMakerVersion?: string
     polling?: boolean
+    theme?: AppThemeId
     codexIntegration?: 'openai' | 'codex'
     codexModel?: string
     codexAuthMethod?: 'chatgpt' | 'api-key'
@@ -188,12 +190,6 @@ async function sendToFileMaker() {
   }
 }
 
-function itemName(xml: string, objectType: string) {
-  const document = new DOMParser().parseFromString(xml, 'application/xml')
-  const named = document.querySelector('Script[name], Step[name], BaseTable[name], Table[name], Field[name], Layout[name], CustomFunction[name], Function[name], Theme[name]')
-  return named?.getAttribute('name')?.trim() || `${objectType} ${new Date().toLocaleString()}`
-}
-
 async function getFromFileMaker() {
   if (!isTauriRuntime()) {
     notifyTransfer('get-error', locale.t('desktopRequired'))
@@ -205,7 +201,11 @@ async function getFromFileMaker() {
     const detected = await nativeGateway.detectFormat(payload.xml)
     const format = detected.format === 'UNKNOWN' ? payload.format : detected.format
     const saved = await clipboard.upsert({
-      name: itemName(payload.xml, detected.objectType),
+      name: clipboardItemName(
+        payload.xml,
+        detected.objectType,
+        [...clipboard.items, ...clipboard.libraryItems],
+      ),
       format,
       windowsFormat: payload.windowsFormat,
       objectType: detected.objectType,
@@ -316,6 +316,7 @@ function workspaceContents(aiWorkspace: AiWorkspaceData) {
       minimap: settings.minimap,
       fileMakerVersion: settings.fileMakerVersion,
       polling: settings.polling,
+      theme: settings.theme,
       codexIntegration: settings.codexIntegration,
       codexModel: settings.codexModel,
       codexAuthMethod: settings.codexAuthMethod,
@@ -456,6 +457,7 @@ async function restoreWorkspace(snapshot: WorkspaceSnapshot) {
     if (savedSettings.minimap !== undefined) settings.minimap = savedSettings.minimap
     if (savedSettings.fileMakerVersion !== undefined) settings.fileMakerVersion = savedSettings.fileMakerVersion
     if (savedSettings.polling !== undefined) settings.polling = savedSettings.polling
+    if (savedSettings.theme !== undefined) settings.theme = savedSettings.theme
     if (savedSettings.codexIntegration !== undefined) settings.codexIntegration = savedSettings.codexIntegration
     if (savedSettings.codexModel !== undefined) settings.codexModel = savedSettings.codexModel
     if (savedSettings.codexAuthMethod !== undefined) settings.codexAuthMethod = savedSettings.codexAuthMethod
@@ -578,7 +580,7 @@ async function copyAsText() {
         <span>{{ locale.t('validation') }}</span>
         <q-badge
           :color="validationErrorCount ? 'negative' : 'positive'"
-          :text-color="validationErrorCount ? 'white' : 'dark'"
+          text-color="white"
           :label="validationErrorCount ? `${validationErrorCount}${locale.t('validationErrorsSuffix')}` : locale.t('pass')"
         />
       </div>
@@ -617,3 +619,9 @@ async function copyAsText() {
     </section>
   </aside>
 </template>
+
+<style scoped>
+.inspector-title .eyebrow {
+  color: var(--blue-bright);
+}
+</style>

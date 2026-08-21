@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use super::CredentialStore;
 
-type ProviderFuture<'a> =
+pub type ProviderFuture<'a> =
     Pin<Box<dyn Future<Output = Result<AiProviderResponse, String>> + Send + 'a>>;
 
 #[derive(Debug, Clone, Deserialize)]
@@ -51,15 +51,20 @@ pub struct AiConnectionTest {
     pub request_id: Option<String>,
 }
 
-trait AiProvider: Send + Sync {
+pub trait AiProvider: Send + Sync {
+    fn id(&self) -> &'static str;
     fn send<'a>(&'a self, request: &'a AiProviderRequest, prompt: String) -> ProviderFuture<'a>;
 }
 
-struct OpenAiProvider {
+pub struct OpenAiProvider {
     api_key: String,
 }
 
 impl AiProvider for OpenAiProvider {
+    fn id(&self) -> &'static str {
+        "openai"
+    }
+
     fn send<'a>(&'a self, request: &'a AiProviderRequest, prompt: String) -> ProviderFuture<'a> {
         Box::pin(async move {
             let client = reqwest::Client::new();
@@ -139,13 +144,21 @@ pub async fn run_provider(
     prompt: String,
     credentials: &CredentialStore,
 ) -> Result<AiProviderResponse, String> {
+    let provider = create_provider(request, credentials)?;
+    provider.send(request, prompt).await
+}
+
+pub fn create_provider(
+    request: &AiProviderRequest,
+    credentials: &CredentialStore,
+) -> Result<Box<dyn AiProvider>, String> {
     match request.provider.as_str() {
         "openai" => {
             let api_key = credentials
                 .resolve_openai_key()?
                 .map(|(key, _)| key)
                 .ok_or_else(|| "OpenAI APIキーが設定されていません。設定 > Codex連携から登録してください。".to_owned())?;
-            OpenAiProvider { api_key }.send(request, prompt).await
+            Ok(Box::new(OpenAiProvider { api_key }))
         }
         "codex" => Err(
             "Codex App Server transport is not connected yet. Select OpenAI or continue with Dry Run tools."

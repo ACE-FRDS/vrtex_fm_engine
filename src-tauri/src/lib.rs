@@ -2,17 +2,20 @@ mod ai;
 mod clipboard;
 mod commands;
 mod database;
+mod license;
 mod xml;
 
 use std::io;
 
 use ai::CredentialStore;
 use database::Database;
+use license::LicenseService;
 use tauri::Manager;
 
 pub struct AppState {
     pub database: Database,
     pub credentials: CredentialStore,
+    pub license: LicenseService,
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -25,9 +28,11 @@ pub fn run() {
             let database = Database::open(app_data_dir.join("vertex-fm-engine.db"))
                 .map_err(|error| io::Error::other(error.to_string()))?;
             let credentials = CredentialStore::new(app_data_dir.join("credentials"));
+            let license = LicenseService::from_runtime();
             app.manage(AppState {
                 database,
                 credentials,
+                license,
             });
             Ok(())
         })
@@ -48,6 +53,12 @@ pub fn run() {
             commands::ai::delete_openai_api_key,
             commands::ai::test_ai_provider_connection,
             commands::ai::run_ai_assistant,
+            commands::knowledge::list_knowledge_packs,
+            commands::knowledge::load_knowledge_pack,
+            commands::knowledge::save_knowledge_pack,
+            commands::knowledge::delete_knowledge_pack,
+            commands::license::get_license_state,
+            commands::license::refresh_license_state,
             commands::clipboard::get_filemaker_clipboard,
             commands::clipboard::set_filemaker_clipboard,
             commands::xml::detect_xml_format,

@@ -2,6 +2,10 @@
 
 FileMaker Pro の XML Clipboard を扱うためのデスクトップ開発支援 IDE です。
 
+## Documentation
+
+- [Vertex FM ENGINE 技術仕様書](docs/Vertex%20FM%20ENGINE%20技術仕様書.md)
+
 ## 実装済みの基盤
 
 - Windows FileMakerカスタムClipboard形式（4-byte Little Endianヘッダー）の読込・書込

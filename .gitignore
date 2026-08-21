@@ -2,8 +2,15 @@ node_modules/
 dist/
 .vite/
 src-tauri/target/
+Installer/
 *.log
 .DS_Store
 .idea/
 .vscode/
 vertex-fm-engine.db*
+*.dpapi
+.env
+.env.*
+!.env.example
+*.pem
+*.key

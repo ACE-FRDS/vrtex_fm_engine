@@ -16,8 +16,12 @@ import ModuleWorkspace from '../components/workspace/ModuleWorkspace.vue'
 import CodexWorkspace from '../components/codex/CodexWorkspace.vue'
 import DocumentationWorkspace from '../components/docs/DocumentationWorkspace.vue'
 import CollectionBrowserWorkspace from '../components/collections/CollectionBrowserWorkspace.vue'
+import RelationshipDesignerWorkspace from '../components/relationship/RelationshipDesignerWorkspace.vue'
+import KnowledgeWorkspace from '../components/knowledge/KnowledgeWorkspace.vue'
 import { useClipboardMonitor } from '../composables/useClipboardMonitor'
 import { formatXmlForDisplay } from '../utils/xmlFormat'
+import { featureAccess } from '../services/featureAccess'
+import { licenseGateway } from '../services/licenseGateway'
 
 const navigation = useNavigationStore()
 const locale = useLocaleStore()
@@ -98,9 +102,20 @@ function handleWindowResize() {
   setSidebarWidth(sidebarWidth.value)
 }
 
+async function refreshLicenseState() {
+  try {
+    featureAccess.applyVerifiedLicense(await licenseGateway.refresh())
+  } catch (error) {
+    console.error('Failed to refresh license state', error)
+  }
+}
+
 window.addEventListener('resize', handleWindowResize)
+window.addEventListener('focus', refreshLicenseState)
+window.addEventListener('vertex:license-changed', refreshLicenseState)
 onMounted(async () => {
   try {
+    featureAccess.applyVerifiedLicense(await licenseGateway.get())
     await clipboard.initialize()
     await library.initialize()
     await collectionWorkspace.initialize()
@@ -120,6 +135,8 @@ onMounted(async () => {
 onBeforeUnmount(() => {
   stopSidebarResize()
   window.removeEventListener('resize', handleWindowResize)
+  window.removeEventListener('focus', refreshLicenseState)
+  window.removeEventListener('vertex:license-changed', refreshLicenseState)
 })
 </script>
 
@@ -149,6 +166,8 @@ onBeforeUnmount(() => {
       />
     </template>
     <CodexWorkspace v-else-if="navigation.active === 'codex'" class="app-module" />
+    <KnowledgeWorkspace v-else-if="navigation.active === 'knowledge'" class="app-module" />
+    <RelationshipDesignerWorkspace v-else-if="navigation.active === 'relationship'" class="app-module" />
     <DocumentationWorkspace v-else-if="navigation.active === 'docs'" class="app-module" />
     <ModuleWorkspace v-else class="app-module" :mode="navigation.active" />
     <StatusBar class="app-status" />

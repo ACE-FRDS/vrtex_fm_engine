@@ -3,6 +3,8 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useNavigationStore, type WorkspaceMode } from '../../stores/navigation'
 import { useLocaleStore } from '../../stores/locale'
 import { isTauriRuntime, nativeGateway, type FileMakerStatus, type UpdateCheck } from '../../services/nativeGateway'
+import { featureAccess, type FeatureId } from '../../services/featureAccess'
+import KnowledgeBrainIcon from '../icons/KnowledgeBrainIcon.vue'
 
 // Keep Codex next to the development utilities: Collections → Codex → Tools.
 const navigation = [
@@ -10,10 +12,15 @@ const navigation = [
   { id: 'library', label: 'navLibrary', icon: 'library_books' },
   { id: 'collections', label: 'navCollections', icon: 'account_tree' },
   { id: 'codex', label: 'navCodex', icon: 'smart_toy' },
+  { id: 'knowledge', label: 'navKnowledge', icon: 'psychology', feature: 'knowledgePackEngine', pro: true },
+  { id: 'relationship', label: 'navRelationshipDesigner', icon: 'hub', feature: 'relationshipDesigner', pro: true },
   { id: 'tools', label: 'navTools', icon: 'construction' },
   { id: 'settings', label: 'navSettings', icon: 'settings' },
   { id: 'docs', label: 'navDocs', icon: 'menu_book' },
 ] as const
+const visibleNavigation = computed(() => navigation.filter((item) =>
+  ('pro' in item && item.pro) || !('feature' in item) || featureAccess.can(item.feature as FeatureId),
+))
 const navigationStore = useNavigationStore()
 const locale = useLocaleStore()
 const appVersion = ref('0.1.0')
@@ -133,7 +140,7 @@ onBeforeUnmount(() => {
 
     <nav class="top-navigation" aria-label="Primary navigation">
       <button
-        v-for="item in navigation"
+        v-for="item in visibleNavigation"
         :key="item.id"
         class="nav-item"
         :class="{ active: navigationStore.active === item.id }"
@@ -141,8 +148,10 @@ onBeforeUnmount(() => {
         :aria-pressed="navigationStore.active === item.id"
         @click="navigationStore.setActive(item.id as WorkspaceMode)"
       >
-        <span class="material-icons">{{ item.icon }}</span>
+        <KnowledgeBrainIcon v-if="item.id === 'knowledge'" class="nav-svg-icon" />
+        <span v-else class="material-icons">{{ item.icon }}</span>
         <span class="nav-label">{{ locale.t(item.label) }}</span>
+        <span v-if="'pro' in item && item.pro" class="nav-pro-badge">PRO</span>
       </button>
     </nav>
 

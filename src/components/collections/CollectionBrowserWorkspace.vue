@@ -176,3 +176,143 @@ async function openCollectionItem(source: ClipboardItem) {
     </section>
   </main>
 </template>
+
+<style scoped>
+.collection-browser-workspace {
+  border-color: var(--line-bright);
+  background: radial-gradient(circle at 15% 0, rgba(var(--accent-rgb), .14), transparent 34%), var(--bg-inset);
+  color: var(--text);
+}
+
+.collection-browser-header {
+  border-color: var(--line-bright);
+  background: linear-gradient(90deg, rgba(var(--accent-rgb), .2), var(--bg-panel) 70%);
+}
+
+.collection-browser-icon {
+  border-color: var(--blue);
+  background: linear-gradient(145deg, var(--blue-soft), var(--bg-inset));
+  color: var(--blue-bright);
+}
+
+.collection-browser-heading > div:last-child > span:first-child,
+.collection-browser-heading p .material-icons {
+  color: var(--blue-bright);
+}
+
+.collection-browser-heading h1 {
+  color: var(--text);
+}
+
+.collection-browser-heading p {
+  color: var(--muted);
+}
+
+.collection-browser-search {
+  border-color: var(--line-bright);
+  background: var(--bg-inset);
+  color: var(--muted);
+}
+
+.collection-browser-search input {
+  color: var(--text);
+}
+
+.collection-browser-search input::placeholder {
+  color: var(--faint);
+}
+
+.collection-browser-search:focus-within {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 2px rgba(var(--accent-rgb), .12);
+}
+
+.collection-context-bar {
+  border-color: var(--line-bright);
+  background: var(--bg-panel-raised);
+  color: var(--muted);
+}
+
+.collection-context-bar > .material-icons,
+.collection-context-bar em {
+  color: var(--blue-bright);
+}
+
+.collection-context-bar strong {
+  color: var(--text);
+}
+
+.collection-context-bar .separator {
+  color: var(--line-bright);
+}
+
+.collection-context-bar em {
+  border-color: var(--blue);
+}
+
+.collection-item-card {
+  border-color: var(--line-bright);
+  background: linear-gradient(145deg, var(--bg-panel-raised), var(--bg-panel));
+}
+
+.collection-item-card:hover,
+.collection-item-card:focus-visible {
+  border-color: var(--blue);
+  background: linear-gradient(145deg, var(--bg-hover), var(--bg-panel-raised));
+  box-shadow: 0 7px 20px rgba(var(--accent-rgb), .12);
+}
+
+.collection-item-card.selected {
+  border-color: var(--blue);
+  background: linear-gradient(145deg, rgba(var(--accent-rgb), .18), var(--bg-panel-raised));
+  box-shadow: inset 3px 0 var(--blue-bright), 0 10px 28px rgba(var(--accent-rgb), .09);
+}
+
+.collection-format-pill {
+  border-color: var(--blue);
+  background: var(--blue-soft);
+  color: var(--blue-bright);
+}
+
+.collection-item-card > header button {
+  border-color: transparent;
+  background: transparent;
+  color: var(--muted);
+}
+
+.collection-item-card > header button:hover {
+  color: var(--blue-bright);
+}
+
+.collection-item-card > strong {
+  color: var(--text);
+}
+
+.collection-item-card > small {
+  color: var(--muted);
+}
+
+.collection-card-tags span {
+  background: var(--bg-inset);
+  color: var(--muted);
+}
+
+.collection-item-card > footer {
+  border-color: var(--line);
+  color: var(--blue-bright);
+}
+
+.collection-browser-empty {
+  border-color: var(--line-bright);
+  background: var(--bg-panel);
+  color: var(--muted);
+}
+
+.collection-browser-empty > .material-icons {
+  color: var(--blue-bright);
+}
+
+.collection-browser-empty strong {
+  color: var(--text);
+}
+</style>
